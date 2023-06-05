@@ -1,0 +1,18 @@
+<launch>
+  <include file="$(find my_wro)/launch/pid.launch">
+    <arg name="motor_num" value="0" />
+    <arg name="set_point" value="-90" />
+  </include>
+  <include file="$(find my_wro)/launch/pid.launch">
+    <arg name="motor_num" value="1" />
+    <arg name="set_point" value="-90" />
+  </include>  
+  <include file="$(find my_wro)/launch/pid.launch">
+    <arg name="motor_num" value="2" />
+    <arg name="set_point" value="90" />
+  </include>  
+  <include file="$(find my_wro)/launch/pid.launch">
+    <arg name="motor_num" value="3" />
+    <arg name="set_point" value="90" />
+  </include>  
+</launch>
