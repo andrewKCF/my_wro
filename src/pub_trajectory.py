@@ -6,12 +6,10 @@ from std_msgs.msg import Duration
 from std_msgs.msg import Bool
 
 flag_enable=False
+flag_complete=True
 
 def publish_velocity(distance, max_velocity, max_acceleration, time_interval):
-    #pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
-    #rospy.init_node('trajectory_publisher', anonymous=True)
-    #rate = rospy.Rate(100)  # 發佈頻率 (10 Hz)
-
+    global flag_enable,flag_complete
     acceleration_time = max_velocity / max_acceleration
     deceleration_time = max_velocity / max_acceleration
     constant_velocity_time = (distance - max_velocity * acceleration_time - max_velocity * deceleration_time) / max_velocity
@@ -21,6 +19,11 @@ def publish_velocity(distance, max_velocity, max_acceleration, time_interval):
     end_time = start_time + rospy.Duration(total_time)
 
     while not rospy.is_shutdown() and rospy.Time.now() < end_time:
+        flag_complete=False
+        if flag_enable==False:
+            flag_complete=True
+            rospy.loginfo("exit trajectory")
+            return
         elapsed_time = rospy.Time.now() - start_time
 
         if elapsed_time <= rospy.Duration(acceleration_time):
@@ -44,34 +47,29 @@ def publish_velocity(distance, max_velocity, max_acceleration, time_interval):
     # 停止機器人
     cmd_vel = Twist()
     pub.publish(cmd_vel)
+    flag_complete=True
 
 def CB_trj_enable(data):
-    if data.data=="enable":
+    global flag_enable,flag_complete
+    if data.data==1:
         flag_enable=1
-    if data.data=="disable":
-        flag_enable=0  
+        rospy.loginfo('/trj_enable:%s',flag_enable)
+        distance = 10.0  # 距離 (米)
+        max_velocity = 0.5  # 最大速度 (米/秒)
+        max_acceleration = 0.2  # 最大加速度 (米/秒^2)
+        time_interval = 0.001  # 發佈頻率 (秒) 
+        if flag_complete:
+            publish_velocity(distance, max_velocity, max_acceleration, time_interval)
+    if data.data==0:
+        flag_enable=0
+        rospy.loginfo('/trj_enable:%s',flag_enable)
 
 if __name__ == '__main__':
     try:
         rospy.init_node('trajectory_publisher', anonymous=True)
         pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         rate = rospy.Rate(100)  # 發佈頻率 (10 Hz)  
-        #rospy.Subscriber("trj_enable", String, CB_trj_enable,queue_size=1,buff_size=65536)
-        distance = 3.0  # 距離 (米)
-        max_velocity = 0.5  # 最大速度 (米/秒)
-        max_acceleration = 0.2  # 最大加速度 (米/秒^2)
-        time_interval = 0.001  # 發佈頻率 (秒)
-        while not rospy.is_shutdown():
-            #rospy.loginfo('/trj_enable:%s',flag_enable)
-            try:
-                flag_enable = rospy.wait_for_message('/trj_enable',  Bool,timeout=0.1).data
-            except:
-                pass
-            rospy.loginfo('/trj_enable:%s',flag_enable)
-            if flag_enable:
-                rospy.loginfo("Publishing trajectory...")
-                publish_velocity(distance, max_velocity, max_acceleration, time_interval)
-                rospy.loginfo("Trajectory published.")
-                flag_enable=False
+        rospy.Subscriber("trj_enable", Bool, CB_trj_enable,queue_size=1,buff_size=65536)
+        rospy.spin()
     except rospy.ROSInterruptException:
         pass

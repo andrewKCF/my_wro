@@ -12,11 +12,13 @@ class StateA(smach.State):
         self.button_pressed = False
 
     def execute(self, userdata):
-        rospy.loginfo("state A")
-        rospy.loginfo("wait pressed A...")
+        rospy.loginfo("state Manul")
+        rospy.loginfo("wait pressed L1...")
         while not self.button_pressed:
-            rospy.sleep(0.1)  # 延遲0.1秒，等待按鈕被按下
-        self.button_pressed = False  # 重置按鈕狀態
+        #while not self.button_pressed:
+            #rospy.sleep(0.1)  # 延遲0.1秒，等待按鈕被按下
+            rospy.loginfo(self.button_pressed)
+        #self.button_pressed = False  # 重置按鈕狀態
         return 'button_pressed'
 
 # 定義狀態B
@@ -26,7 +28,7 @@ class StateB(smach.State):
         self.button_released = False
 
     def execute(self, userdata):
-        rospy.loginfo("state B")
+        rospy.loginfo("state Auto")
         rospy.loginfo("waite release...")
         while not self.button_released:
             rospy.sleep(0.1)  # 延遲0.1秒，等待按鈕被放開
@@ -35,13 +37,18 @@ class StateB(smach.State):
 
 state_a = StateA()
 state_b = StateB()
+button_pressed=False
 
 def joy_callback(data):
+    global button_pressed
     # 在這裡獲取按鈕狀態並更新狀態機的用戶數據
     if data.buttons[6] == 1: #L1
-        state_a.button_pressed = True
+        button_pressed=not(button_pressed)
+        state_a.button_pressed = button_pressed
+        #rospy.loginfo(state_a.button_pressed)
+    '''
     elif data.buttons[6] == 0:
-        state_b.button_released = True
+        state_b.button_released = True'''
 
 def main():
     rospy.init_node('joy_state_machine')
