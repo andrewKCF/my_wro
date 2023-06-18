@@ -19,6 +19,9 @@ pub_state=None
 def callback(data):
     global setMotor 
     global control_effort,control_effort_pre
+    #if rospy.get_param('~motor_num')=='0' or rospy.get_param('~motor_num')=='1':
+        #data.data=data.data
+    #else:
     data.data=-data.data
     
     control_effort=control_effort_pre+data.data
@@ -34,7 +37,7 @@ def callback(data):
     
     #setMotor(0,data.data) #motor_num  speed
     setMotor(int(rospy.get_param('~motor_num')),control_effort)
-    
+    rospy.loginfo("motor num:"+str(rospy.get_param('~motor_num')))
     rospy.loginfo("abs control_effort:"+str(data.data))
     rospy.loginfo("rel control_effort:"+str(control_effort))
     #setMotor(0,-1) 
@@ -74,12 +77,14 @@ def start():
     pub_enable = rospy.Publisher(str_pid_enable, Bool, queue_size=1)
     pub_enable.publish(1)
     rate = rospy.Rate(100) # 10hz
+    '''
     while not rospy.is_shutdown():
         pub_setpoint.publish(int(rospy.get_param('~set_point')))
         #pub_setpoint.publish(-40)
         #rospy.loginfo("setpoint:"+str(40))
         #pub_state.publish(70)
         rate.sleep()
+    '''
     rospy.spin()
 
 if __name__ == '__main__':
